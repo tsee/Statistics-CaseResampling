@@ -10,6 +10,7 @@ our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( 'all' => [ qw(
   resample
   resample_medians
+  median
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
@@ -32,7 +33,7 @@ Statistics::CaseResampling - Efficient resampling
 
 =head1 SYNOPSIS
 
-  use Statistics::CaseResampling ('resample', 'resample_medians');
+  use Statistics::CaseResampling ':all';
 
   my $sample = [1,3,5,7,1,2,9];
   my $resampled = resample($sample);
@@ -44,6 +45,9 @@ Statistics::CaseResampling - Efficient resampling
   # of $n_resamples resample runs
   # this is vastly more efficient that doing the same thing with
   # repeated resample() calls
+  
+  # utility function:
+  print median([1..4]), "\n"; # prints 2.5
 
 =head1 DESCRIPTION
 
@@ -80,7 +84,7 @@ Beware of memory leaks. So far, this module is not well tested.
 
 None by default.
 
-Can export C<:all>, C<resample>, or C<resample_medians>.
+Can export C<:all>, C<resample>, C<median>, and C<resample_medians>.
 
 =head1 SEE ALSO
 
