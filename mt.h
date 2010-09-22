@@ -1,5 +1,5 @@
-#ifndef _MATH_MT_H_
-#define _MATH_MT_H_
+#ifndef _S_CS_MATH_MT_H_
+#define _S_CS_MATH_MT_H_
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1300)
 typedef unsigned __int32 uint32_t;
