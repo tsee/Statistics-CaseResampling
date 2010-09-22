@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 8;
+use Test::More tests => 18;
 use Statistics::CaseResampling ':all';
 use List::Util ('min', 'max');
 
@@ -18,4 +18,14 @@ is(scalar(@$medians), 30);
 cmp_ok(min(@$medians), '>=', 1);
 cmp_ok(max(@$medians), '<=', 11);
 
+is_approx(median([1,2]), 1.5);
+is_approx(median([1,2,3]), 2);
+is_approx(median([1,2,3,4]), 2.5);
+is_approx(median([4,3,2,1]), 2.5);
+is_approx(median([4,1,2,3]), 2.5);
+
+sub is_approx {
+  cmp_ok($_[0]+1.e-9, '>=', $_[1]);
+  cmp_ok($_[0]-1.e-9, '<=', $_[1]);
+}
 
