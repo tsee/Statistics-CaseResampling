@@ -46,10 +46,12 @@ double
 cs_median(double* sample, I32 n)
 {
   cs_sort(sample, 0, n);
-  if (n & 1)
+  if (n & 1) {
     return sample[n/2];
-  else
-    return 0.5*(sample[n/2]+sample[n/2+1]);
+  }
+  else {
+    return 0.5*(sample[n/2-1]+sample[n/2]);
+  }
 }
 
 
@@ -73,6 +75,8 @@ avToCAry(pTHX_ AV* in, double** out, I32* n)
   I32 i;
   thisN = av_len(in)+1;
   *n = thisN;
+  if (thisN == 0)
+    return;
 
   Newx(ary, thisN, double);
   *out = ary;
@@ -92,6 +96,9 @@ cAryToAV(pTHX_ double* in, AV** out, I32 n)
   SV* elem;
   I32 i;
   *out = newAV();
+  if (n == 0)
+    return;
+
   av_extend(*out, n-1);
 
   for (i = 0; i < n; ++i) {
@@ -169,11 +176,15 @@ resample(sample)
   CODE:
     rnd = get_rnd(aTHX);
     avToCAry(aTHX_ sample, &csample, &nelem);
-    Newx(destsample, nelem, double);
-    do_resample(csample, nelem, rnd, destsample);
+    if (nelem != 0) {
+      Newx(destsample, nelem, double);
+      do_resample(csample, nelem, rnd, destsample);
+      cAryToAV(aTHX_ destsample, &RETVAL, nelem);
+      Safefree(destsample);
+    }
+    else
+      RETVAL = newAV();
     Safefree(csample);
-    cAryToAV(aTHX_ destsample, &RETVAL, nelem);
-    Safefree(destsample);
     sv_2mortal((SV*)RETVAL);
   OUTPUT: RETVAL
 
@@ -190,15 +201,32 @@ resample_medians(sample, runs)
   CODE:
     rnd = get_rnd(aTHX);
     avToCAry(aTHX_ sample, &csample, &nelem);
-    Newx(destsample, nelem, double);
     RETVAL = newAV();
-    av_extend(RETVAL, runs-1);
-    for (iRun = 0; iRun < runs; ++iRun) {
-      do_resample(csample, nelem, rnd, destsample);
-      av_store(RETVAL, iRun, newSVnv(cs_median(destsample, nelem))); /* Note: cs_median sorts. Could be done in O(n) instead! */
+    if (nelem != 0) {
+      Newx(destsample, nelem, double);
+      av_extend(RETVAL, runs-1);
+      for (iRun = 0; iRun < runs; ++iRun) {
+        do_resample(csample, nelem, rnd, destsample);
+        av_store(RETVAL, iRun, newSVnv(cs_median(destsample, nelem))); /* Note: cs_median sorts. Could be done in O(n) instead! */
+      }
+      Safefree(destsample);
     }
     Safefree(csample);
-    Safefree(destsample);
     sv_2mortal((SV*)RETVAL);
+  OUTPUT: RETVAL
+
+double
+median(sample)
+    AV* sample
+  PREINIT:
+    I32 nelem;
+    double* csample;
+  CODE:
+    avToCAry(aTHX_ sample, &csample, &nelem);
+    if (nelem == 0)
+      RETVAL = 0.;
+    else
+      RETVAL = cs_median(csample, nelem);
+    Safefree(csample);
   OUTPUT: RETVAL
 
