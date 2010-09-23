@@ -13,7 +13,7 @@ void * U32ArrayPtr ( int n ) {
     return SvPVX(sv);
 }
 
-
+/*
 void
 cs_sort(double arr[], I32 beg, I32 end)
 {
@@ -27,7 +27,6 @@ cs_sort(double arr[], I32 beg, I32 end)
       if (arr[l] <= piv)
         l++;
       else {
-        /*swap(&arr[l], &arr[--r]);*/
         t = arr[l];
         arr[l] = arr[--r];
         arr[r] = t;
@@ -36,12 +35,13 @@ cs_sort(double arr[], I32 beg, I32 end)
     t = arr[--l];
     arr[l] = arr[beg];
     arr[beg] = t;
-    /*swap(&arr[--l], &arr[beg]);*/
     cs_sort(arr, beg, l);
     cs_sort(arr, r, end);
   }
 }
+*/
 
+/*
 double
 cs_median(double* sample, I32 n)
 {
@@ -52,6 +52,62 @@ cs_median(double* sample, I32 n)
   else {
     return 0.5*(sample[n/2-1]+sample[n/2]);
   }
+}
+*/
+
+#define SWAP(a,b) tmp=(a);(a)=(b);(b)=tmp;
+
+double
+cs_select(double* sample, I32 n, U32 k) {
+  U32 i, ir, j, l, mid;
+  double a, tmp;
+
+  l = 0;
+  ir = n-1;
+  while(1) {
+    if (ir <= l+1) { 
+      if (ir == l+1 && sample[ir] < sample[l]) {
+	SWAP(sample[l], sample[ir]);
+      }
+      return sample[k];
+    }
+    else {
+      mid = (l+ir) >> 1; 
+      SWAP(sample[mid], sample[l+1]);
+      if (sample[l] > sample[ir]) {
+	SWAP(sample[l], sample[ir]);
+      }
+      if (sample[l+1] > sample[ir]) {
+	SWAP(sample[l+1], sample[ir]);
+      }
+      if (sample[l] > sample[l+1]) {
+	SWAP(sample[l], sample[l+1]);
+      }
+      i = l+1; 
+      j = ir;
+      a = sample[l+1]; 
+      while(1) { 
+	do i++; while (sample[i] < a); 
+	do j--; while (sample[j] > a); 
+	if (j < i)
+          break; 
+	SWAP(sample[i], sample[j]);
+      } 
+      sample[l+1] = sample[j]; 
+      sample[j] = a;
+      if (j >= k)
+        ir = j-1; 
+      if (j <= k)
+        l = i;
+    }
+  }
+}
+
+double
+cs_median(double* sample, I32 n)
+{
+  U32 k = n/2 - !(n & 1);
+  return cs_select(sample, n, k);
 }
 
 

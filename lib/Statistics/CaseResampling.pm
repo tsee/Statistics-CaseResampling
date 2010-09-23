@@ -6,15 +6,13 @@ use warnings;
 require Exporter;
 
 our @ISA = qw(Exporter);
-
-our %EXPORT_TAGS = ( 'all' => [ qw(
+our @EXPORT_OK = qw(
   resample
   resample_medians
   median
-) ] );
-
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
+);
 our @EXPORT = qw();
+our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
 
 our $VERSION = '0.02';
 
@@ -47,13 +45,13 @@ Statistics::CaseResampling - Efficient resampling
   # repeated resample() calls
   
   # utility function:
-  print median([1..4]), "\n"; # prints 2.5
+  print median([1..5]), "\n"; # prints 3
 
 =head1 DESCRIPTION
 
 This is a simple XS module for resampling a set of numbers efficiently.
 As a convenience (for my use case), it can calculate the medians
-(unfortunately in O(n*log(n))) of many resamples and return those instead.
+(in O(n) using a selection algorithm) of many resamples and return those instead.
 
 Since this involves drawing B<many> random numbers, the module comes
 with an embedded Mersenne twister (taken from C<Math::Random::MT>).
@@ -71,20 +69,38 @@ or
 Do not use the embedded random number generator for other purposes.
 Use C<Math::Random::MT> instead!
 
-=head1 TODO
-
-One could calculate other statistics than the median in C for performance.
-
-It is possible to calculate the median in O(n) without sorting.
-That would also take care of losing my bog-standard quick sort implementation.
-
-Beware of memory leaks. So far, this module is not well tested.
-
 =head2 EXPORT
 
 None by default.
 
-Can export C<:all>, C<resample>, C<median>, and C<resample_medians>.
+Can export any of the functions that are documented below
+using standard C<Exporter> semantics, including the
+customary C<:all> group.
+
+=head1 FUNCTIONS
+
+=head2 resample(ARRAYREF)
+
+Returns a reference to an array containing N random elements from the
+input array, where N is the length of the original array.
+
+=head2 median(ARRAYREF)
+
+Calculates the median of a sample. Works in linear time thanks
+to using a selection instead of a sort. Unfortunately, the way
+this is implemented, the median of an even number of parameters
+is, here, defined as the C<n/2-1>th largest number and not
+the average of the C<n/2-1>th and the C<n/2>th number. This shouldn't
+matter for nontrivial sample sizes.
+
+=head2 resample_medians(ARRAYREF, NMEDIANS)
+
+Returns a reference to an array containing the medians of
+C<NMEDIANS> resamples of the original input sample.
+
+=head1 TODO
+
+One could calculate other statistics than the median in C for performance.
 
 =head1 SEE ALSO
 
