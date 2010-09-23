@@ -1,5 +1,8 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.04  Thu Sep 23 21:00 2010
+  - Exposes select_kth() to Perl.
+
 0.03  Thu Sep 23 20:00 2010
   - median() is now much faster thanks to using
     O(n) selection instead of O(n*log(n)) quick sort.
