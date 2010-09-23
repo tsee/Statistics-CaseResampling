@@ -37,6 +37,11 @@
 \.swp$
 \.swo$
 
+
+CaseResampling\.(?:bs|c|o)$
+\.o$
+t\.pl$
+
 # Avoid OS-specific files/dirs
 #   Mac OSX metadata
 \B\.DS_Store
