@@ -10,6 +10,7 @@ our @EXPORT_OK = qw(
   resample
   resample_medians
   median
+  select_kth
 );
 our @EXPORT = qw();
 our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
@@ -44,8 +45,9 @@ Statistics::CaseResampling - Efficient resampling
   # this is vastly more efficient that doing the same thing with
   # repeated resample() calls
   
-  # utility function:
+  # utility functions:
   print median([1..5]), "\n"; # prints 3
+  print select_kth([1..5], 1), "\n"; # inefficient way to calculate the minimum
 
 =head1 DESCRIPTION
 
@@ -93,6 +95,15 @@ is, here, defined as the C<n/2-1>th largest number and not
 the average of the C<n/2-1>th and the C<n/2>th number. This shouldn't
 matter for nontrivial sample sizes.
 
+=head2 select_kth(ARRAYREF, K)
+
+Selects the kth smallest element from the sample.
+
+You get the median with this definition of K:
+
+  my $k = int(@$sample/2) + (@$sample & 1);
+  my $median = select_kth($sample, $k);
+
 =head2 resample_medians(ARRAYREF, NMEDIANS)
 
 Returns a reference to an array containing the medians of
@@ -117,6 +128,5 @@ Copyright (C) 2010 by Steffen Mueller
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.0 or,
 at your option, any later version of Perl 5 you may have available.
-
 
 =cut
