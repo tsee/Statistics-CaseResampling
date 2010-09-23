@@ -263,7 +263,7 @@ resample_medians(sample, runs)
       av_extend(RETVAL, runs-1);
       for (iRun = 0; iRun < runs; ++iRun) {
         do_resample(csample, nelem, rnd, destsample);
-        av_store(RETVAL, iRun, newSVnv(cs_median(destsample, nelem))); /* Note: cs_median sorts. Could be done in O(n) instead! */
+        av_store(RETVAL, iRun, newSVnv(cs_median(destsample, nelem)));
       }
       Safefree(destsample);
     }
@@ -283,6 +283,23 @@ median(sample)
       RETVAL = 0.;
     else
       RETVAL = cs_median(csample, nelem);
+    Safefree(csample);
+  OUTPUT: RETVAL
+
+
+double
+select_kth(sample, kth)
+    AV* sample
+    I32 kth
+  PREINIT:
+    I32 nelem;
+    double* csample;
+  CODE:
+    avToCAry(aTHX_ sample, &csample, &nelem);
+    if (kth < 1 || kth > nelem) {
+      croak("Can't select %ith smallest element from a list of %i elements", kth, nelem);
+    }
+    RETVAL = cs_select(csample, nelem, kth-1);
     Safefree(csample);
   OUTPUT: RETVAL
 
