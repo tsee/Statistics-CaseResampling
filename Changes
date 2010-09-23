@@ -1,5 +1,10 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.03  Thu Sep 23 20:00 2010
+  - median() is now much faster thanks to using
+    O(n) selection instead of O(n*log(n)) quick sort.
+  - Docs upgrade.
+
 0.02  Wed Sep 22 22:00 2010
   - OBIWAN. Nuff said.
 
