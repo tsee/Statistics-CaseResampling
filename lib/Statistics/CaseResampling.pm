@@ -15,7 +15,7 @@ our @EXPORT_OK = qw(
   first_quartile
   third_quartile
   mean
-  simple_confidence_limits_from_median_samples
+  simple_confidence_limits_from_samples
   median_simple_confidence_limits
   approx_erf
   approx_erf_inv
