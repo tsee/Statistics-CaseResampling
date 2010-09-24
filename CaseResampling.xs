@@ -275,6 +275,7 @@ resample(sample)
     sv_2mortal((SV*)RETVAL);
   OUTPUT: RETVAL
 
+
 AV*
 resample_medians(sample, runs)
     AV* sample
@@ -346,12 +347,14 @@ median(sample)
     Safefree(csample);
   OUTPUT: RETVAL
 
+
 double
 mean(sample)
     AV* sample
   CODE:
     RETVAL = cs_mean_av(aTHX_ sample);
   OUTPUT: RETVAL
+
 
 double
 select_kth(sample, kth)
