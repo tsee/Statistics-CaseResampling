@@ -1,3 +1,4 @@
+#define PERL_NO_GET_CONTEXT     /* we want efficiency */
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -6,11 +7,14 @@
 
 #include "mt.h"
 
+
 typedef struct mt * Statistics__CaseResampling__RdGen;
 
-void * U32ArrayPtr ( int n ) {
-    SV * sv = sv_2mortal( NEWSV( 0, n*sizeof(U32) ) );
-    return SvPVX(sv);
+void*
+U32ArrayPtr (pTHX_ int n)
+{
+  SV * sv = sv_2mortal( NEWSV( 0, n*sizeof(U32) ) );
+  return SvPVX(sv);
 }
 
 /*
@@ -110,6 +114,33 @@ cs_median(double* sample, I32 n)
   return cs_select(sample, n, k);
 }
 
+double
+cs_mean(double* sample, I32 n)
+{
+  I32 i;
+  double sum = 0.;
+  for (i = 0; i < n; ++i)
+    sum += sample[i];
+  return sum/(double)n;
+}
+
+double
+cs_mean_av(pTHX_ AV* sample)
+{
+  I32 i, n;
+  SV** elem;
+  n = av_len(sample)+1;
+  double sum = 0.;
+  for (i = 0; i < n; ++i) {
+    if (NULL == (elem = av_fetch(sample, i, 0))) {
+      croak("Could not fetch element from array");
+    }
+    else
+      sum += SvNV(*elem);
+  }
+  return sum/(double)n;
+}
+
 
 void
 do_resample(double* original, I32 n, struct mt* rdgen, double* dest)
@@ -194,7 +225,7 @@ mt_setup(seed)
 Statistics::CaseResampling::RdGen
 mt_setup_array( array, ... )
   CODE:
-    U32 * array = U32ArrayPtr( items );
+    U32 * array = U32ArrayPtr(aTHX_ items);
     U32 ix_array = 0;
     while (items--) {
       array[ix_array] = (U32)SvIV(ST(ix_array));
@@ -271,6 +302,35 @@ resample_medians(sample, runs)
     sv_2mortal((SV*)RETVAL);
   OUTPUT: RETVAL
 
+
+AV*
+resample_means(sample, runs)
+    AV* sample
+    I32 runs
+  PREINIT:
+    I32 nelem;
+    I32 iRun;
+    double* csample;
+    double* destsample;
+    struct mt* rnd;
+  CODE:
+    rnd = get_rnd(aTHX);
+    avToCAry(aTHX_ sample, &csample, &nelem);
+    RETVAL = newAV();
+    if (nelem != 0) {
+      Newx(destsample, nelem, double);
+      av_extend(RETVAL, runs-1);
+      for (iRun = 0; iRun < runs; ++iRun) {
+        do_resample(csample, nelem, rnd, destsample);
+        av_store(RETVAL, iRun, newSVnv(cs_mean(destsample, nelem)));
+      }
+      Safefree(destsample);
+    }
+    Safefree(csample);
+    sv_2mortal((SV*)RETVAL);
+  OUTPUT: RETVAL
+
+
 double
 median(sample)
     AV* sample
@@ -286,6 +346,13 @@ median(sample)
     Safefree(csample);
   OUTPUT: RETVAL
 
+double
+mean(sample)
+    AV* sample
+  PREINIT:
+  CODE:
+    RETVAL = cs_mean_av(aTHX_ sample);
+  OUTPUT: RETVAL
 
 double
 select_kth(sample, kth)
