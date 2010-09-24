@@ -1,10 +1,12 @@
 use strict;
 use warnings;
-use Test::More tests => 51;
+use Test::More tests => 57;
 use Statistics::CaseResampling ':all';
 use List::Util ('min', 'max');
 
 my $sample = [1..11];
+is_approx(mean($sample), (1+2+3+4+5+6+7+8+9+10+11)/11);
+
 my $resample = resample($sample);
 
 ok(ref($resample) && ref($resample) eq 'ARRAY');
@@ -17,6 +19,12 @@ ok(ref($medians) && ref($medians) eq 'ARRAY');
 is(scalar(@$medians), 30);
 cmp_ok(min(@$medians), '>=', 1);
 cmp_ok(max(@$medians), '<=', 11);
+
+my $means = resample_means($sample, 30);
+ok(ref($means) && ref($means) eq 'ARRAY');
+is(scalar(@$means), 30);
+cmp_ok(min(@$means), '>=', 1);
+cmp_ok(max(@$means), '<=', 11);
 
 my @tests = (
   [  [1], 1  ],
