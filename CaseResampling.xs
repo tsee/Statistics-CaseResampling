@@ -349,7 +349,6 @@ median(sample)
 double
 mean(sample)
     AV* sample
-  PREINIT:
   CODE:
     RETVAL = cs_mean_av(aTHX_ sample);
   OUTPUT: RETVAL
