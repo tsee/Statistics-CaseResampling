@@ -1,5 +1,12 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.06  Fri Sep 24 21:00 2010
+  - Calculation of confidence limits for various statistics.
+  - Rewrite of the documentation.
+  - More exposed XS functions:
+  => erf, erf^-1, nsigma <=> alpha conversion,
+     first and third quartiles, mean
+
 0.05  Fri Sep 24 20:00 2010
   - Implement resample_means.
   - Optimize using PERL_NO_GET_CONTEXT
