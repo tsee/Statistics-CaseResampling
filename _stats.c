@@ -55,6 +55,23 @@ cs_median(double* sample, I32 n)
   return cs_select(sample, n, k);
 }
 
+
+double
+cs_first_quartile(double* sample, I32 n)
+{
+  U32 k = (U32)((n/4) + 1);
+  return cs_select(sample, n, k);
+}
+
+
+double
+cs_third_quartile(double* sample, I32 n)
+{
+  U32 k = (U32)((n*3/4) + 1);
+  return cs_select(sample, n, k);
+}
+
+
 double
 cs_mean(double* sample, I32 n)
 {

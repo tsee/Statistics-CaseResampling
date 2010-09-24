@@ -11,8 +11,14 @@
 /* O(n) selection algorithm selecting the kth value from the sample of size n */
 double cs_select(double* sample, I32 n, U32 k);
 
-/* fast median in O(n) using selection */
+/* fast median in O(n) using selection (median == second quartile) */
 double cs_median(double* sample, I32 n);
+
+/* fast first quartile (25%) in O(n) using selection */
+double cs_first_quartile(double* sample, I32 n);
+
+/* fast third quartile (75%) in O(n) using selection */
+double cs_third_quartile(double* sample, I32 n);
 
 /* run-of-the-mill mean */
 double cs_mean(double* sample, I32 n);
