@@ -1,9 +1,10 @@
 use strict;
 use warnings;
-use Test::More tests => 57+8+8;
+use Test::More tests => 57+8+8+6;
 use Statistics::CaseResampling ':all';
 use List::Util ('min', 'max');
 
+# erf and erf^-1
 is_approx(approx_erf(0), 0);
 is_approx(approx_erf(1.), -approx_erf(-1.));
 cmp_ok(approx_erf(100), '<=', 1);
@@ -20,6 +21,13 @@ eval {approx_erf_inv(-1)};
 ok(!!$@);
 eval {approx_erf_inv(100)};
 ok(!!$@);
+
+
+# nsigma <-> alpha (the lazy version)
+is_approx(nsigma_to_alpha(alpha_to_nsigma(0.05)), 0.05);
+is_approx(nsigma_to_alpha(alpha_to_nsigma(0.01)), 0.01);
+is_approx(nsigma_to_alpha(alpha_to_nsigma(0.10)), 0.10);
+
 
 my $sample = [1..11];
 is_approx(mean($sample), (1+2+3+4+5+6+7+8+9+10+11)/11);
