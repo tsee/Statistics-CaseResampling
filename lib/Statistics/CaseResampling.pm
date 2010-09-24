@@ -17,6 +17,10 @@ our @EXPORT_OK = qw(
   mean
   simple_confidence_limits_from_median_samples
   median_simple_confidence_limits
+  approx_erf
+  approx_erf_inv
+  nsigma_to_alpha
+  alpha_to_nsigma
 );
 our @EXPORT = qw();
 our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
@@ -41,7 +45,7 @@ Statistics::CaseResampling - Efficient resampling and calculation of medians wit
   use Statistics::CaseResampling ':all';
   
   my $sample = [1,3,5,7,1,2,9]; # ... usually MUCH more data ...
-  my $confidence = 0.90; # ~2*sigma or "90% within confidence limits"
+  my $confidence = 0.95; # ~2*sigma or "90% within confidence limits"
   #my $confidence = 0.37; # ~1*sigma or "~66% within confidence limits"
   
   # calculate the median of the sample with lower and upper confidence
@@ -124,6 +128,40 @@ basic building blocks. Unfortunately, that means you may
 want to read the documentation backwards :)
 
 All of these functions are written in C for speed.
+
+=head2 approx_erf($x)
+
+Calculates an approximatation of the error function of I<x>.
+Implemented after
+
+  Winitzki, Sergei (6 February 2008).
+  "A handy approximation for the error function and its inverse" (PDF). 
+  http://homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
+
+Quoting: Relative precision better than C<1.3e-4>.
+
+=head2 approx_erf_inv($x)
+
+Calculates an approximation of the inverse of the
+error function of I<x>.
+
+Algorithm from the same source as C<approx_erf>.
+
+Quoting: Relative precision better than C<2e-3>.
+
+=head2 nsigma_to_alpha($nsigma)
+
+Calculates the probability that a measurement from a normal
+distribution is further away from the mean than C<$nsigma>
+standard deviations.
+
+The confidence level (what you pass as the
+C<CONFIDENCE> parameter to some functions in this module)
+is C<1 - nsigma_to_alpha($nsigma)>.
+
+=head2 alpha_to_nsigma($alpha)
+
+Inverse of C<nsigma_to_alpha()>.
 
 =head2 mean(ARRAYREF)
 
@@ -232,6 +270,12 @@ One could calculate more statistics in C for performance.
 
 L<Math::Random::MT>
 
+On the approximation of the error function:
+
+  Winitzki, Sergei (6 February 2008).
+  "A handy approximation for the error function and its inverse" (PDF). 
+  http://homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
+
 =head1 AUTHOR
 
 Steffen Mueller, E<lt>smueller@cpan.orgE<gt>
@@ -245,3 +289,4 @@ it under the same terms as Perl itself, either Perl version 5.8.0 or,
 at your option, any later version of Perl 5 you may have available.
 
 =cut
+

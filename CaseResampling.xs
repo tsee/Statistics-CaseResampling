@@ -259,7 +259,7 @@ median_simple_confidence_limits(sample, confidence...)
     AV* sample
     double confidence
   PREINIT:
-    /* "confidence" is 1-2*alpha */
+    /* "confidence" is 1-alpha */
     I32 runs, nelem, i_run;
     double *csample, *destsample, *medians;
     struct mt* rnd;
@@ -268,7 +268,7 @@ median_simple_confidence_limits(sample, confidence...)
     double upper_ci = 0.;
     double alpha;
   INIT:
-    alpha = (1.-confidence)/2.;
+    alpha = 1.-confidence;
   PPCODE:
     if (items == 2)
       runs = 1000;
@@ -311,14 +311,14 @@ simple_confidence_limits_from_samples(statistic, statistics, confidence)
     AV* statistics
     double confidence
   PREINIT:
-    /* "confidence" is 1-2*alpha */
+    /* "confidence" is 1-alpha */
     I32 nelem;
     double *cstatistics;
     double lower_ci = 0.;
     double upper_ci = 0.;
     double alpha;
   INIT:
-    alpha = (1.-confidence)/2.;
+    alpha = 1.-confidence;
   PPCODE:
     if (confidence <= 0. || confidence >= 1.) {
       croak("Confidence level has to be in (0, 1)");
@@ -336,4 +336,38 @@ simple_confidence_limits_from_samples(statistic, statistics, confidence)
     mPUSHn(lower_ci);
     mPUSHn(statistic);
     mPUSHn(upper_ci);
+
+
+double
+approx_erf(x)
+    double x
+  CODE:
+    RETVAL = cs_approx_erf(x);
+  OUTPUT: RETVAL
+
+
+double
+approx_erf_inv(x)
+    double x
+  CODE:
+    if (x <= 0. || x >= 1.)
+      croak("The inverse error function is defined in (0,1). %f is outside that range", x);
+    RETVAL = cs_approx_erf_inv(x);
+  OUTPUT: RETVAL
+
+
+double
+alpha_to_nsigma(x)
+    double x
+  CODE:
+    RETVAL = cs_alpha_to_nsigma(x);
+  OUTPUT: RETVAL
+
+
+double
+nsigma_to_alpha(x)
+    double x
+  CODE:
+    RETVAL = cs_nsigma_to_alpha(x);
+  OUTPUT: RETVAL
 
