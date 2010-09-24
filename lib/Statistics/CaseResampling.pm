@@ -12,7 +12,11 @@ our @EXPORT_OK = qw(
   resample_means
   select_kth
   median
+  first_quartile
+  third_quartile
   mean
+  simple_confidence_limits_from_median_samples
+  median_simple_confidence_limits
 );
 our @EXPORT = qw();
 our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
@@ -30,23 +34,38 @@ __END__
 
 =head1 NAME
 
-Statistics::CaseResampling - Efficient resampling
+Statistics::CaseResampling - Efficient resampling and calculation of medians with confidence intervals
 
 =head1 SYNOPSIS
 
   use Statistics::CaseResampling ':all';
-
-  my $sample = [1,3,5,7,1,2,9];
+  
+  my $sample = [1,3,5,7,1,2,9]; # ... usually MUCH more data ...
+  my $confidence = 0.90; # ~2*sigma or "90% within confidence limits"
+  #my $confidence = 0.37; # ~1*sigma or "~66% within confidence limits"
+  
+  # calculate the median of the sample with lower and upper confidence
+  # limits using resampling/bootstrapping:
+  my ($lower_cl, $median, $upper_cl)
+    = median_simple_confidence_limits($sample, $confidence);
+  
+  # There are many auxiliary functions:
+  
   my $resampled = resample($sample);
   # $resampled is now a random set of measurements from $sample,
   # including potential duplicates
   
   my $medians = resample_medians($sample, $n_resamples);
-  # $medians is not an array reference containing the medians
+  # $medians is now an array reference containing the medians
   # of $n_resamples resample runs
-  # this is vastly more efficient that doing the same thing with
-  # repeated resample() calls
+  # This is vastly more efficient that doing the same thing with
+  # repeated resample() calls!
+  # Analogously:
   my $means = resample_means($sample, $n_resamples);
+  
+  # you can get the cl's from a set of separately resampled medians, too:
+  my ($lower_cl, $median, $upper_cl)
+    = simple_confidence_limits_from_samples($median, $medians, $confidence);
   
   # utility functions:
   print median([1..5]), "\n"; # prints 3
@@ -55,12 +74,24 @@ Statistics::CaseResampling - Efficient resampling
 
 =head1 DESCRIPTION
 
-This is a simple XS module for resampling a set of numbers efficiently.
-As a convenience (for my use case), it can calculate the medians
-(in O(n) using a selection algorithm) of many resamples and return those instead.
+The purpose of this (XS) module is to calculate the median (or in principle
+also other statistics) with confidence intervals on a sample. To do that,
+it uses a technique called bootstrapping. In a nutshell, it resamples the
+sample a lot of times and for each resample, it calculates the median.
+From the distribution of medians, it then calculates the confidence limits.
 
-Since this involves drawing B<many> random numbers, the module comes
-with an embedded Mersenne twister (taken from C<Math::Random::MT>).
+In order to implement the confidence limit calculation, various other
+functions had to be implemented efficiently (both algorithmically efficient
+and done in C). These functions may be useful in their own right and are
+thus exposed to Perl. Most notably, this exposes a median (and general selection)
+algorithm that works in linear time as opposed to the trivial implementation
+that requires C<O(n*log(n))>.
+
+=head2 Random numbers
+
+The resampling involves drawing B<many> random numbers. Therefore,
+the module comes with an embedded Mersenne twister (taken from
+C<Math::Random::MT>).
 
 If you want to change the seed of the RNG, do this:
 
@@ -73,7 +104,8 @@ or
     = Statistics::CaseResampling::RdGen::setup(@seed);
 
 Do not use the embedded random number generator for other purposes.
-Use C<Math::Random::MT> instead!
+Use C<Math::Random::MT> instead! At this point, you cannot change
+the type of RNG.
 
 =head2 EXPORT
 
@@ -85,10 +117,55 @@ customary C<:all> group.
 
 =head1 FUNCTIONS
 
+This list of functions is loosely sorted from I<basic>
+to I<comprehensive> because the more complicated functions
+are usually (under the hood, in C) implemented using the
+basic building blocks. Unfortunately, that means you may
+want to read the documentation backwards :)
+
+All of these functions are written in C for speed.
+
+=head2 mean(ARRAYREF)
+
+Calculates the mean of a sample.
+
+=head2 median(ARRAYREF)
+
+Calculates the median (second quartile)
+of a sample. Works in linear time thanks
+to using a selection instead of a sort.
+
+Unfortunately, the way
+this is implemented, the median of an even number of parameters
+is, here, defined as the C<n/2-1>th largest number and not
+the average of the C<n/2-1>th and the C<n/2>th number. This shouldn't
+matter for nontrivial sample sizes!
+
+=head2 first_quartile(ARRAYREF)
+
+Calculates the first quartile of the sample.
+
+=head2 third_quartile(ARRAYREF)
+
+Calculates the third quartile of the sample.
+
+=head2 select_kth(ARRAYREF, K)
+
+Selects the kth smallest element from the sample.
+
+This is the general function that implements the median/quartile
+calculation. You get the median with this definition of K:
+
+  my $k = int(@$sample/2) + (@$sample & 1);
+  my $median = select_kth($sample, $k);
+
 =head2 resample(ARRAYREF)
 
 Returns a reference to an array containing N random elements from the
 input array, where N is the length of the original array.
+
+This is different from shuffling in that it's random drawing without
+removing the drawn elements from the sample.
 
 =head2 resample_medians(ARRAYREF, NMEDIANS)
 
@@ -100,32 +177,56 @@ C<NMEDIANS> resamples of the original input sample.
 Returns a reference to an array containing the means of
 C<NMEANS> resamples of the original input sample.
 
-=head2 median(ARRAYREF)
+=head2 simple_confidence_limits_from_median_samples(STATISTIC, STATISTIC_SAMPLES, CONFIDENCE)
 
-Calculates the median of a sample. Works in linear time thanks
-to using a selection instead of a sort. Unfortunately, the way
-this is implemented, the median of an even number of parameters
-is, here, defined as the C<n/2-1>th largest number and not
-the average of the C<n/2-1>th and the C<n/2>th number. This shouldn't
-matter for nontrivial sample sizes.
+Calculates the confidence limits for I<STATISTIC>. Returns
+the lower confidence limit, the statistic, and the upper confidence
+limit. I<STATISTIC_SAMPLES> is the output of, for example, C<resample_means(\@sample)>.
+I<CONFIDENCE> indicates the fraction of data within the confidence limits
+(assuming a normal, symmetric distribution of the statistic =E<gt> I<simple confidence
+limits>).
 
-=head2 mean(ARRAYREF)
+For example, to get the 90% confidence (~2 sigma) interval for the mean of your sample,
+you can do the following:
 
-Calculates the meean of a sample.
+  my $sample = [<numbers>];
+  my $means = resample_means($sample, $n_resamples);
+  my ($lower_cl, $mean, $upper_cl)
+    = simple_confidence_limits_from_samples(mean($sample), $means, 0.90);
 
-=head2 select_kth(ARRAYREF, K)
+If you want to apply this logic to other statistics such as the first
+or third quartile, you have to manually resample and lose the advantage of
+doing it in C:
 
-Selects the kth smallest element from the sample.
+  my $sample = [<numbers>];
+  my $quartiles = [];
+  foreach (1..1000) {
+    push @$quartiles, first_quartile(resample($sample));
+  }
+  my ($lower_cl, $firstq, $upper_cl)
+    = simple_confidence_limits_from_samples(
+        first_quartile($sample), $quartiles, 0.90
+      );
 
-You get the median with this definition of K:
+For a reliable calculation of the confidence limits, you should use at least
+1000 samples if not more. Yes. This whole procedure is B<expensive>.
 
-  my $k = int(@$sample/2) + (@$sample & 1);
-  my $median = select_kth($sample, $k);
+For medians, however, use the following function:
+
+=head2 median_simple_confidence_limits(SAMPLE, CONFIDENCE, [NSAMPLES])
+
+Calculates the confidence limits for the C<CONFIDENCE> level
+for the median of I<SAMPLE>. Returns the lower confidence limit,
+the median, and the upper confidence limit.
+
+In order to calculate the limits, a lot of resampling has to be done.
+I<NSAMPLES> defaults to C<1000>. Try running this a couple of times
+on your data interactively to see how the limits still vary a little
+bit at this setting.
 
 =head1 TODO
 
-One could calculate other statistics than the median and mean
-in C for performance.
+One could calculate more statistics in C for performance.
 
 =head1 SEE ALSO
 
