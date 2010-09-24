@@ -6,6 +6,7 @@
 #include "ppport.h"
 
 #include "mt.h"
+#include "stats.h"
 
 
 typedef struct mt * Statistics__CaseResampling__RdGen;
@@ -15,113 +16,6 @@ U32ArrayPtr (pTHX_ int n)
 {
   SV * sv = sv_2mortal( NEWSV( 0, n*sizeof(U32) ) );
   return SvPVX(sv);
-}
-
-/*
-void
-cs_sort(double arr[], I32 beg, I32 end)
-{
-  double t;
-  if (end > beg + 1)
-  {
-    double piv = arr[beg];
-    I32 l = beg + 1, r = end;
-    while (l < r)
-    {
-      if (arr[l] <= piv)
-        l++;
-      else {
-        t = arr[l];
-        arr[l] = arr[--r];
-        arr[r] = t;
-      }
-    }
-    t = arr[--l];
-    arr[l] = arr[beg];
-    arr[beg] = t;
-    cs_sort(arr, beg, l);
-    cs_sort(arr, r, end);
-  }
-}
-*/
-
-/*
-double
-cs_median(double* sample, I32 n)
-{
-  cs_sort(sample, 0, n);
-  if (n & 1) {
-    return sample[n/2];
-  }
-  else {
-    return 0.5*(sample[n/2-1]+sample[n/2]);
-  }
-}
-*/
-
-#define SWAP(a,b) tmp=(a);(a)=(b);(b)=tmp;
-
-double
-cs_select(double* sample, I32 n, U32 k) {
-  U32 i, ir, j, l, mid;
-  double a, tmp;
-
-  l = 0;
-  ir = n-1;
-  while(1) {
-    if (ir <= l+1) { 
-      if (ir == l+1 && sample[ir] < sample[l]) {
-	SWAP(sample[l], sample[ir]);
-      }
-      return sample[k];
-    }
-    else {
-      mid = (l+ir) >> 1; 
-      SWAP(sample[mid], sample[l+1]);
-      if (sample[l] > sample[ir]) {
-	SWAP(sample[l], sample[ir]);
-      }
-      if (sample[l+1] > sample[ir]) {
-	SWAP(sample[l+1], sample[ir]);
-      }
-      if (sample[l] > sample[l+1]) {
-	SWAP(sample[l], sample[l+1]);
-      }
-      i = l+1; 
-      j = ir;
-      a = sample[l+1]; 
-      while(1) { 
-	do i++; while (sample[i] < a); 
-	do j--; while (sample[j] > a); 
-	if (j < i)
-          break; 
-	SWAP(sample[i], sample[j]);
-      } 
-      sample[l+1] = sample[j]; 
-      sample[j] = a;
-      if (j >= k)
-        ir = j-1; 
-      if (j <= k)
-        l = i;
-    }
-  }
-}
-
-double
-cs_median(double* sample, I32 n)
-{
-  U32 k = n/2 - !(n & 1);
-  return cs_select(sample, n, k);
-}
-
-double
-cs_mean(double* sample, I32 n)
-{
-  I32 i;
-  double sum = 0.;
-  for (i = 0; i < n; ++i)
-    sum += sample[i];
-  return sum/(double)n;
 }
 
 double
@@ -139,18 +33,6 @@ cs_mean_av(pTHX_ AV* sample)
       sum += SvNV(*elem);
   }
   return sum/(double)n;
-}
-
-
-void
-do_resample(double* original, I32 n, struct mt* rdgen, double* dest)
-{
-  I32 rndElem;
-  I32 i;
-  for (i = 0; i < n; ++i) {
-    rndElem = (I32) (mt_genrand(rdgen) * n);
-    dest[i] = original[rndElem];
-  }
 }
 
 void
@@ -211,43 +93,10 @@ get_rnd(pTHX)
 }
 
 
-MODULE = Statistics::CaseResampling		PACKAGE = Statistics::CaseResampling::RdGen PREFIX=mt_
+MODULE = Statistics::CaseResampling		PACKAGE = Statistics::CaseResampling
 PROTOTYPES: DISABLE
 
-Statistics::CaseResampling::RdGen
-mt_setup(seed)
-  U32     seed
-  CODE:
-    RETVAL = mt_setup(seed);
-  OUTPUT:
-    RETVAL
-
-Statistics::CaseResampling::RdGen
-mt_setup_array( array, ... )
-  CODE:
-    U32 * array = U32ArrayPtr(aTHX_ items);
-    U32 ix_array = 0;
-    while (items--) {
-      array[ix_array] = (U32)SvIV(ST(ix_array));
-      ix_array++;
-    }
-    RETVAL = mt_setup_array( (uint32_t*)array, ix_array );
-  OUTPUT:
-    RETVAL
-
-void
-mt_DESTROY(self)
-    Statistics::CaseResampling::RdGen self
-  CODE:
-    mt_free(self);
-
-double
-mt_genrand(self)
-    Statistics::CaseResampling::RdGen self
-  CODE:
-    RETVAL = mt_genrand(self);
-  OUTPUT:
-    RETVAL
+INCLUDE: RdGen.xs.inc
 
 MODULE = Statistics::CaseResampling		PACKAGE = Statistics::CaseResampling
 PROTOTYPES: DISABLE
@@ -282,7 +131,7 @@ resample_medians(sample, runs)
     I32 runs
   PREINIT:
     I32 nelem;
-    I32 iRun;
+    I32 i_run;
     double* csample;
     double* destsample;
     struct mt* rnd;
@@ -293,9 +142,9 @@ resample_medians(sample, runs)
     if (nelem != 0) {
       Newx(destsample, nelem, double);
       av_extend(RETVAL, runs-1);
-      for (iRun = 0; iRun < runs; ++iRun) {
+      for (i_run = 0; i_run < runs; ++i_run) {
         do_resample(csample, nelem, rnd, destsample);
-        av_store(RETVAL, iRun, newSVnv(cs_median(destsample, nelem)));
+        av_store(RETVAL, i_run, newSVnv(cs_median(destsample, nelem)));
       }
       Safefree(destsample);
     }
@@ -310,7 +159,7 @@ resample_means(sample, runs)
     I32 runs
   PREINIT:
     I32 nelem;
-    I32 iRun;
+    I32 i_run;
     double* csample;
     double* destsample;
     struct mt* rnd;
@@ -321,9 +170,9 @@ resample_means(sample, runs)
     if (nelem != 0) {
       Newx(destsample, nelem, double);
       av_extend(RETVAL, runs-1);
-      for (iRun = 0; iRun < runs; ++iRun) {
+      for (i_run = 0; i_run < runs; ++i_run) {
         do_resample(csample, nelem, rnd, destsample);
-        av_store(RETVAL, iRun, newSVnv(cs_mean(destsample, nelem)));
+        av_store(RETVAL, i_run, newSVnv(cs_mean(destsample, nelem)));
       }
       Safefree(destsample);
     }
@@ -371,4 +220,88 @@ select_kth(sample, kth)
     RETVAL = cs_select(csample, nelem, kth-1);
     Safefree(csample);
   OUTPUT: RETVAL
+
+
+void
+median_simple_confidence_limits(sample, confidence...)
+    AV* sample
+    double confidence
+  PREINIT:
+    /* "confidence" is 1-2*alpha */
+    I32 runs, nelem, i_run;
+    double *csample, *destsample, *medians;
+    struct mt* rnd;
+    double median   = 0.;
+    double lower_ci = 0.;
+    double upper_ci = 0.;
+    double alpha;
+  INIT:
+    alpha = (1.-confidence)/2.;
+  PPCODE:
+    if (items == 2)
+      runs = 1000;
+    else if (items == 3)
+      runs = SvUV(ST(2));
+    else {
+      croak("Usage: ($lower, $median, $upper) = median_confidence_limits(\\@sample, $confidence, [$nruns]);");
+    }
+    if (confidence <= 0. || confidence >= 1.) {
+      croak("Confidence level has to be in (0, 1)");
+    }
+    rnd = get_rnd(aTHX);
+    avToCAry(aTHX_ sample, &csample, &nelem);
+    if (nelem != 0) {
+      median = cs_median(csample, nelem);
+      Newx(medians, runs, double);
+      Newx(destsample, nelem, double);
+      for (i_run = 0; i_run < runs; ++i_run) {
+        do_resample(csample, nelem, rnd, destsample);
+        medians[i_run] = cs_median(destsample, nelem);
+      }
+      Safefree(destsample);
+      /* lower = t - (t*_((R+1)*(1-alpha)) - t)
+       * upper = t - (t*_((R+1)*alpha) - t)
+       */
+      lower_ci = 2.*median - cs_select( medians, runs, (I32)((runs+1.)*(1.-alpha)) );
+      upper_ci = 2.*median - cs_select( medians, runs, (I32)((runs+1.)*alpha) );
+      Safefree(medians);
+    }
+    Safefree(csample);
+    EXTEND(SP, 3);
+    mPUSHn(lower_ci);
+    mPUSHn(median);
+    mPUSHn(upper_ci);
+
+
+void
+simple_confidence_limits_from_median_samples(median, medians, confidence)
+    double median
+    AV* medians
+    double confidence
+  PREINIT:
+    /* "confidence" is 1-2*alpha */
+    I32 nelem;
+    double *cmedians;
+    double lower_ci = 0.;
+    double upper_ci = 0.;
+    double alpha;
+  INIT:
+    alpha = (1.-confidence)/2.;
+  PPCODE:
+    if (confidence <= 0. || confidence >= 1.) {
+      croak("Confidence level has to be in (0, 1)");
+    }
+    avToCAry(aTHX_ medians, &cmedians, &nelem);
+    if (nelem != 0) {
+      /* lower = t - (t*_((R+1)*(1-alpha)) - t)
+       * upper = t - (t*_((R+1)*alpha) - t)
+       */
+      lower_ci = 2.*median - cs_select( cmedians, nelem, (I32)((nelem+1.)*(1.-alpha)) );
+      upper_ci = 2.*median - cs_select( cmedians, nelem, (I32)((nelem+1.)*alpha) );
+    }
+    Safefree(cmedians);
+    EXTEND(SP, 3);
+    mPUSHn(lower_ci);
+    mPUSHn(median);
+    mPUSHn(upper_ci);
 
