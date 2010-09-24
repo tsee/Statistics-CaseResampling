@@ -198,6 +198,38 @@ median(sample)
 
 
 double
+first_quartile(sample)
+    AV* sample
+  PREINIT:
+    I32 nelem;
+    double* csample;
+  CODE:
+    avToCAry(aTHX_ sample, &csample, &nelem);
+    if (nelem == 0)
+      RETVAL = 0.;
+    else
+      RETVAL = cs_first_quartile(csample, nelem);
+    Safefree(csample);
+  OUTPUT: RETVAL
+
+
+double
+third_quartile(sample)
+    AV* sample
+  PREINIT:
+    I32 nelem;
+    double* csample;
+  CODE:
+    avToCAry(aTHX_ sample, &csample, &nelem);
+    if (nelem == 0)
+      RETVAL = 0.;
+    else
+      RETVAL = cs_third_quartile(csample, nelem);
+    Safefree(csample);
+  OUTPUT: RETVAL
+
+
+double
 mean(sample)
     AV* sample
   CODE:
@@ -274,14 +306,14 @@ median_simple_confidence_limits(sample, confidence...)
 
 
 void
-simple_confidence_limits_from_median_samples(median, medians, confidence)
-    double median
-    AV* medians
+simple_confidence_limits_from_samples(statistic, statistics, confidence)
+    double statistic
+    AV* statistics
     double confidence
   PREINIT:
     /* "confidence" is 1-2*alpha */
     I32 nelem;
-    double *cmedians;
+    double *cstatistics;
     double lower_ci = 0.;
     double upper_ci = 0.;
     double alpha;
@@ -291,17 +323,17 @@ simple_confidence_limits_from_median_samples(median, medians, confidence)
     if (confidence <= 0. || confidence >= 1.) {
       croak("Confidence level has to be in (0, 1)");
     }
-    avToCAry(aTHX_ medians, &cmedians, &nelem);
+    avToCAry(aTHX_ statistics, &cstatistics, &nelem);
     if (nelem != 0) {
       /* lower = t - (t*_((R+1)*(1-alpha)) - t)
        * upper = t - (t*_((R+1)*alpha) - t)
        */
-      lower_ci = 2.*median - cs_select( cmedians, nelem, (I32)((nelem+1.)*(1.-alpha)) );
-      upper_ci = 2.*median - cs_select( cmedians, nelem, (I32)((nelem+1.)*alpha) );
+      lower_ci = 2.*statistic - cs_select( cstatistics, nelem, (I32)((nelem+1.)*(1.-alpha)) );
+      upper_ci = 2.*statistic - cs_select( cstatistics, nelem, (I32)((nelem+1.)*alpha) );
     }
-    Safefree(cmedians);
+    Safefree(cstatistics);
     EXTEND(SP, 3);
     mPUSHn(lower_ci);
-    mPUSHn(median);
+    mPUSHn(statistic);
     mPUSHn(upper_ci);
 
