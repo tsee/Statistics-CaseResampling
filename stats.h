@@ -32,4 +32,33 @@ void do_resample(double* original, I32 n, struct mt* rdgen, double* dest);
 /* median using the unoptimized quicksort. Currently not used */
 /* double cs_median(double* sample, I32 n)  */
 
+
+/* an approximate error function and its inverse
+ * Implemented after
+ * Winitzki, Sergei (6 February 2008).
+ * "A handy approximation for the error function and its inverse" (PDF). 
+ * http://homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
+ *
+ * Quoting: erf: Rel. precision better than 1.3e-4
+ *          erf_inv: Rel. precision better than 2e-3
+ *
+ * erf(x) defined in the R
+ * erf_inv(x) defined in (0,1)
+ */
+double cs_approx_erf(double x);
+double cs_approx_erf_inv(double x);
+
+/* calculate the no. of std. dev. nsigma
+ * from alpha, where alpha = 1 - P
+ * and P is the probability that measurements
+ * from a Gaussian are within mean +/- n*sigma.
+ */
+double cs_alpha_to_nsigma(double alpha);
+
+/* inverse of cs_nsigma_from_alpha:
+ * Calculate the probability that a measurement will be
+ * outside the bounds of n*sigma around the mean.
+ */
+double cs_nsigma_to_alpha(double nsigma);
+
 #endif

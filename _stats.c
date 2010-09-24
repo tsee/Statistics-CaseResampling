@@ -1,4 +1,5 @@
 #include "stats.h"
+#include <math.h>
 
 #define SWAP(a,b) tmp=(a);(a)=(b);(b)=tmp;
 
@@ -134,4 +135,56 @@ cs_median(double* sample, I32 n)
   }
 }
 */
+
+
+double
+cs_approx_erf(double x)
+{
+  /*
+   * const double a = ( 8./(3.*M_PI) )
+   *                * (M_PI - 3.) / (4. - M_PI);
+   */
+  const double a = 0.147; /* better than the ~0.140 above */
+  const double xsq = x*x;
+  return
+    (x < 0 ? -1. : 1.)
+    * sqrt(
+      1. - exp(
+        -xsq * (4./M_PI + a*xsq) / (1. + a*xsq)
+      )
+    );
+}
+
+
+double
+cs_approx_erf_inv(double x)
+{
+  const double a = 0.147; /* better than the ~0.140 above */
+  const double b = log(1. - x*x);
+  return
+    (x < 0 ? -1. : 1.)
+    * sqrt(
+      (-2./(M_PI * a))
+      - b/2.
+      + sqrt(
+        pow( 2./(M_PI*a) + b/2., 2. )
+        - b/a
+      )
+    );
+}
+
+
+double
+cs_alpha_to_nsigma(double alpha)
+{
+  return sqrt(2.) * cs_approx_erf_inv(1.-alpha);
+}
+
+
+
+double
+cs_nsigma_to_alpha(double nsigma)
+{
+  return 1.-cs_approx_erf(nsigma/sqrt(2.));
+}
 
