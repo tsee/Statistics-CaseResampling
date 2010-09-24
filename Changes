@@ -1,5 +1,9 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.05  Fri Sep 24 20:00 2010
+  - Implement resample_means.
+  - Optimize using PERL_NO_GET_CONTEXT
+
 0.04  Thu Sep 23 21:00 2010
   - Exposes select_kth() to Perl.
 

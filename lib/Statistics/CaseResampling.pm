@@ -17,7 +17,7 @@ our @EXPORT_OK = qw(
 our @EXPORT = qw();
 our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 require XSLoader;
 XSLoader::load('Statistics::CaseResampling', $VERSION);
