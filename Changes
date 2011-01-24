@@ -1,5 +1,8 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.07  Mon Jan 24 23:00 2010
+  - Updated ppport.h for compatibility with older perls.
+
 0.06  Fri Sep 24 21:00 2010
   - Calculation of confidence limits for various statistics.
   - Rewrite of the documentation.
