@@ -12,6 +12,7 @@ our @EXPORT_OK = qw(
   resample_means
   select_kth
   median
+  median_absolute_deviation
   first_quartile
   third_quartile
   mean
@@ -179,6 +180,11 @@ is, here, defined as the C<n/2-1>th largest number and not
 the average of the C<n/2-1>th and the C<n/2>th number. This shouldn't
 matter for nontrivial sample sizes!
 
+=head2 median_absolute_deviation(ARRAYREF)
+
+Calculates the median absolute deviation (MAD) in what I believe is O(n).
+Take care to rescale the MAD before using it in place of a standard deviation.
+
 =head2 first_quartile(ARRAYREF)
 
 Calculates the first quartile of the sample.
@@ -282,7 +288,7 @@ Steffen Mueller, E<lt>smueller@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2010, 2011 by Steffen Mueller
+Copyright (C) 2010, 2011, 2012 by Steffen Mueller
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.0 or,

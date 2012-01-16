@@ -196,6 +196,33 @@ median(sample)
     Safefree(csample);
   OUTPUT: RETVAL
 
+double
+median_absolute_deviation(sample)
+    AV* sample
+  PREINIT:
+    I32 nelem;
+    double* csample;
+  CODE:
+    avToCAry(aTHX_ sample, &csample, &nelem);
+    if (nelem == 0)
+      RETVAL = 0.;
+    else {
+      unsigned int i;
+      double* absdev;
+
+      const double median = cs_median(csample, nelem);
+      /* in principle, I think one could write an algorithm
+       * that doesn't require mallocing the second array by inlining an
+       * O(n) median that visits each element only once? */
+      absdev = (double*)malloc(nelem * sizeof(double));
+      for (i = 0; i < nelem; ++i)
+        absdev[i] = fabs(csample[i] - median);
+      RETVAL = cs_median(absdev, nelem);
+      free(absdev);
+    }
+    Safefree(csample);
+  OUTPUT: RETVAL
+
 
 double
 first_quartile(sample)

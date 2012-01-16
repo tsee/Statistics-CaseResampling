@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 57+8+8+6;
+use Test::More tests => 57+8+8+6+4;
 use Statistics::CaseResampling ':all';
 use List::Util ('min', 'max');
 
@@ -30,7 +30,9 @@ is_approx(nsigma_to_alpha(alpha_to_nsigma(0.10)), 0.10);
 
 
 my $sample = [1..11];
-is_approx(mean($sample), (1+2+3+4+5+6+7+8+9+10+11)/11);
+is_approx(mean($sample), (1+2+3+4+5+6+7+8+9+10+11)/11, "mean of example is correct");
+is_approx(median($sample), 6, "median of example is correct");
+is_approx(median_absolute_deviation($sample), 3, "MAD of example is correct");
 
 my $resample = resample($sample);
 
