@@ -124,6 +124,11 @@ FUNCTIONS
     the average of the "n/2-1"th and the "n/2"th number. This shouldn't
     matter for nontrivial sample sizes!
 
+  median_absolute_deviation(ARRAYREF)
+    Calculates the median absolute deviation (MAD) in what I believe is
+    O(n). Take care to rescale the MAD before using it in place of a
+    standard deviation.
+
   first_quartile(ARRAYREF)
     Calculates the first quartile of the sample.
 
@@ -215,7 +220,7 @@ AUTHOR
     Steffen Mueller, <smueller@cpan.org>
 
 COPYRIGHT AND LICENSE
-    Copyright (C) 2010, 2011 by Steffen Mueller
+    Copyright (C) 2010, 2011, 2012 by Steffen Mueller
 
     This library is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself, either Perl version 5.8.0 or, at

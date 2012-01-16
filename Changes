@@ -1,5 +1,8 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.09  Mon Jan 16 08:28:00 2012
+  - Implements median_absolute_deviation.
+
 0.08  Sun Aug 21 21:54:00 2011
   - Tiny darwin fix [jtpalmer]
 
