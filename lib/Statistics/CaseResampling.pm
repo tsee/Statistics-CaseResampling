@@ -282,6 +282,12 @@ On the approximation of the error function:
   "A handy approximation for the error function and its inverse" (PDF). 
   http://homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
 
+The ~O(n) median implementation is based on C.A.R. Hoare's quickselect
+algorithm. See
+L<http://en.wikipedia.org/wiki/Selection_algorithm#Partition-based_general_selection_algorithm>.
+Right now, it does not implement the Median of Medians algorithm that would
+guarantee linearity.
+
 =head1 AUTHOR
 
 Steffen Mueller, E<lt>smueller@cpan.orgE<gt>
