@@ -1,5 +1,8 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.10  mon Feb 13 08:26:00 2012
+  - Document the choice of O(n) median algorithm.
+
 0.09  Mon Jan 16 08:28:00 2012
   - Implements median_absolute_deviation.
 
