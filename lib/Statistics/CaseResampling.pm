@@ -24,6 +24,8 @@ our @EXPORT_OK = qw(
   approx_erf_inv
   nsigma_to_alpha
   alpha_to_nsigma
+  sample_standard_deviation
+  population_standard_deviation
 );
 our @EXPORT = qw();
 our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
@@ -126,9 +128,81 @@ This list of functions is loosely sorted from I<basic>
 to I<comprehensive> because the more complicated functions
 are usually (under the hood, in C) implemented using the
 basic building blocks. Unfortunately, that means you may
-want to read the documentation backwards :)
+want to read the documentation backwards. :)
+
+Additionally, there is a whole set of general purpose, fast (XS)
+functions for calculating statistical metrics. They're useful
+without the bootstrapping related stuff, so they're listed in
+the L</"OTHER FUNCTIONS"> section below.
 
 All of these functions are written in C for speed.
+
+=head2 resample(ARRAYREF)
+
+Returns a reference to an array containing N random elements from the
+input array, where N is the length of the original array.
+
+This is different from shuffling in that it's random drawing without
+removing the drawn elements from the sample.
+
+=head2 resample_medians(ARRAYREF, NMEDIANS)
+
+Returns a reference to an array containing the medians of
+C<NMEDIANS> resamples of the original input sample.
+
+=head2 resample_means(ARRAYREF, NMEANS)
+
+Returns a reference to an array containing the means of
+C<NMEANS> resamples of the original input sample.
+
+=head2 simple_confidence_limits_from_median_samples(STATISTIC, STATISTIC_SAMPLES, CONFIDENCE)
+
+Calculates the confidence limits for I<STATISTIC>. Returns
+the lower confidence limit, the statistic, and the upper confidence
+limit. I<STATISTIC_SAMPLES> is the output of, for example, C<resample_means(\@sample)>.
+I<CONFIDENCE> indicates the fraction of data within the confidence limits
+(assuming a normal, symmetric distribution of the statistic =E<gt> I<simple confidence
+limits>).
+
+For example, to get the 90% confidence (~2 sigma) interval for the mean of your sample,
+you can do the following:
+
+  my $sample = [<numbers>];
+  my $means = resample_means($sample, $n_resamples);
+  my ($lower_cl, $mean, $upper_cl)
+    = simple_confidence_limits_from_samples(mean($sample), $means, 0.90);
+
+If you want to apply this logic to other statistics such as the first
+or third quartile, you have to manually resample and lose the advantage of
+doing it in C:
+
+  my $sample = [<numbers>];
+  my $quartiles = [];
+  foreach (1..1000) {
+    push @$quartiles, first_quartile(resample($sample));
+  }
+  my ($lower_cl, $firstq, $upper_cl)
+    = simple_confidence_limits_from_samples(
+        first_quartile($sample), $quartiles, 0.90
+      );
+
+For a reliable calculation of the confidence limits, you should use at least
+1000 samples if not more. Yes. This whole procedure is B<expensive>.
+
+For medians, however, use the following function:
+
+=head2 median_simple_confidence_limits(SAMPLE, CONFIDENCE, [NSAMPLES])
+
+Calculates the confidence limits for the C<CONFIDENCE> level
+for the median of I<SAMPLE>. Returns the lower confidence limit,
+the median, and the upper confidence limit.
+
+In order to calculate the limits, a lot of resampling has to be done.
+I<NSAMPLES> defaults to C<1000>. Try running this a couple of times
+on your data interactively to see how the limits still vary a little
+bit at this setting.
+
+=head1 OTHER FUNCTIONS
 
 =head2 approx_erf($x)
 
@@ -203,70 +277,14 @@ calculation. You get the median with this definition of K:
   my $k = int(@$sample/2) + (@$sample & 1);
   my $median = select_kth($sample, $k);
 
-=head2 resample(ARRAYREF)
+=head2 sample_standard_deviation
 
-Returns a reference to an array containing N random elements from the
-input array, where N is the length of the original array.
+Given the sample mean and an anonymous array of numbers (the sample),
+calculates the sample standard deviation.
 
-This is different from shuffling in that it's random drawing without
-removing the drawn elements from the sample.
+=head2 population_standard_deviation
 
-=head2 resample_medians(ARRAYREF, NMEDIANS)
-
-Returns a reference to an array containing the medians of
-C<NMEDIANS> resamples of the original input sample.
-
-=head2 resample_means(ARRAYREF, NMEANS)
-
-Returns a reference to an array containing the means of
-C<NMEANS> resamples of the original input sample.
-
-=head2 simple_confidence_limits_from_median_samples(STATISTIC, STATISTIC_SAMPLES, CONFIDENCE)
-
-Calculates the confidence limits for I<STATISTIC>. Returns
-the lower confidence limit, the statistic, and the upper confidence
-limit. I<STATISTIC_SAMPLES> is the output of, for example, C<resample_means(\@sample)>.
-I<CONFIDENCE> indicates the fraction of data within the confidence limits
-(assuming a normal, symmetric distribution of the statistic =E<gt> I<simple confidence
-limits>).
-
-For example, to get the 90% confidence (~2 sigma) interval for the mean of your sample,
-you can do the following:
-
-  my $sample = [<numbers>];
-  my $means = resample_means($sample, $n_resamples);
-  my ($lower_cl, $mean, $upper_cl)
-    = simple_confidence_limits_from_samples(mean($sample), $means, 0.90);
-
-If you want to apply this logic to other statistics such as the first
-or third quartile, you have to manually resample and lose the advantage of
-doing it in C:
-
-  my $sample = [<numbers>];
-  my $quartiles = [];
-  foreach (1..1000) {
-    push @$quartiles, first_quartile(resample($sample));
-  }
-  my ($lower_cl, $firstq, $upper_cl)
-    = simple_confidence_limits_from_samples(
-        first_quartile($sample), $quartiles, 0.90
-      );
-
-For a reliable calculation of the confidence limits, you should use at least
-1000 samples if not more. Yes. This whole procedure is B<expensive>.
-
-For medians, however, use the following function:
-
-=head2 median_simple_confidence_limits(SAMPLE, CONFIDENCE, [NSAMPLES])
-
-Calculates the confidence limits for the C<CONFIDENCE> level
-for the median of I<SAMPLE>. Returns the lower confidence limit,
-the median, and the upper confidence limit.
-
-In order to calculate the limits, a lot of resampling has to be done.
-I<NSAMPLES> defaults to C<1000>. Try running this a couple of times
-on your data interactively to see how the limits still vary a little
-bit at this setting.
+Same as sample_standard_deviation, but without the correction to C<N>.
 
 =head1 TODO
 

@@ -7,6 +7,7 @@
 
 #include "mt.h"
 #include "stats.h"
+#include <stdlib.h>
 
 
 typedef struct mt * Statistics__CaseResampling__RdGen;
@@ -33,6 +34,23 @@ cs_mean_av(pTHX_ AV* sample)
       sum += SvNV(*elem);
   }
   return sum/(double)n;
+}
+
+double
+cs_sum_deviation_squared_av(pTHX_ double mean, AV* sample)
+{
+  I32 i, n;
+  SV** elem;
+  n = av_len(sample)+1;
+  double sum = 0.;
+  for (i = 0; i < n; ++i) {
+    if (NULL == (elem = av_fetch(sample, i, 0))) {
+      croak("Could not fetch element from array");
+    }
+    else
+      sum += pow(SvNV(*elem)-mean, 2);
+  }
+  return sum;
 }
 
 void
@@ -261,6 +279,26 @@ mean(sample)
     AV* sample
   CODE:
     RETVAL = cs_mean_av(aTHX_ sample);
+  OUTPUT: RETVAL
+
+
+double
+sample_standard_deviation(mean, sample)
+    SV* mean
+    AV* sample
+  CODE:
+    RETVAL =  cs_sum_deviation_squared_av(aTHX_ SvNV(mean), sample);
+    RETVAL /= av_len(sample); /* av_len() is N-1! */
+  OUTPUT: RETVAL
+
+
+double
+population_standard_deviation(mean, sample)
+    SV* mean
+    AV* sample
+  CODE:
+    RETVAL =  cs_sum_deviation_squared_av(aTHX_ SvNV(mean), sample);
+    RETVAL /= av_len(sample)+1; /* av_len() is N-1! */
   OUTPUT: RETVAL
 
 
