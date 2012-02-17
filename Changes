@@ -1,6 +1,11 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
-0.10  mon Feb 13 08:26:00 2012
+0.11  Fri Feb 17 13:00:00 2012
+  - Implement minor extra statistics functions in XS:
+    sample std. dev. and population std. dev.
+  - Shuffle docs around a little bit.
+
+0.10  Mon Feb 13 08:26:00 2012
   - Document the choice of O(n) median algorithm.
 
 0.09  Mon Jan 16 08:28:00 2012
