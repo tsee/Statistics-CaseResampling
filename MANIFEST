@@ -13,4 +13,5 @@ RdGen.xs.inc
 README
 stats.h
 t/01all.t
+t/02stats.t
 typemap
