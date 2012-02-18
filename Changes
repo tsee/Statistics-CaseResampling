@@ -1,5 +1,8 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.12  Sat Feb 18 15:00:00 2012
+  - Test accuracy fixes.
+
 0.11  Fri Feb 17 13:00:00 2012
   - Implement minor extra statistics functions in XS:
     sample std. dev. and population std. dev.
