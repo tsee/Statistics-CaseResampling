@@ -10,8 +10,8 @@ my $mean = sum(@sample) / @sample;
 is_approx(mean(\@sample), $mean, "mean");
 
 my @diffsq = map {($_-$mean)**2} @sample;
-my $std_dev = sum(@diffsq) / @sample;
-my $samp_std_dev = sum(@diffsq) / (@sample-1);
+my $std_dev = sqrt( sum(@diffsq) / @sample );
+my $samp_std_dev = sqrt( sum(@diffsq) / (@sample-1) );
 
 is_approx(sample_standard_deviation($mean, \@sample), $samp_std_dev, "sample_standard_deviation");
 is_approx(population_standard_deviation($mean, \@sample), $std_dev, "population_standard_deviation");

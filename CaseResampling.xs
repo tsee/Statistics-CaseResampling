@@ -288,7 +288,7 @@ sample_standard_deviation(mean, sample)
     AV* sample
   CODE:
     RETVAL =  cs_sum_deviation_squared_av(aTHX_ SvNV(mean), sample);
-    RETVAL /= av_len(sample); /* av_len() is N-1! */
+    RETVAL = pow( RETVAL / av_len(sample), 0.5 ); /* av_len() is N-1! */
   OUTPUT: RETVAL
 
 
@@ -298,7 +298,7 @@ population_standard_deviation(mean, sample)
     AV* sample
   CODE:
     RETVAL =  cs_sum_deviation_squared_av(aTHX_ SvNV(mean), sample);
-    RETVAL /= av_len(sample)+1; /* av_len() is N-1! */
+    RETVAL = pow( RETVAL / (av_len(sample)+1), 0.5 ); /* av_len() is N-1! */
   OUTPUT: RETVAL
 
 
