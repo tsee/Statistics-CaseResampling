@@ -24,8 +24,9 @@ cs_mean_av(pTHX_ AV* sample)
 {
   I32 i, n;
   SV** elem;
+  double sum;
   n = av_len(sample)+1;
-  double sum = 0.;
+  sum = 0.;
   for (i = 0; i < n; ++i) {
     if (NULL == (elem = av_fetch(sample, i, 0))) {
       croak("Could not fetch element from array");
@@ -41,8 +42,9 @@ cs_sum_deviation_squared_av(pTHX_ double mean, AV* sample)
 {
   I32 i, n;
   SV** elem;
+  double sum;
   n = av_len(sample)+1;
-  double sum = 0.;
+  sum = 0.;
   for (i = 0; i < n; ++i) {
     if (NULL == (elem = av_fetch(sample, i, 0))) {
       croak("Could not fetch element from array");
