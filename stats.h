@@ -1,5 +1,8 @@
 #ifndef _S_CS_STATS_H_
 #define _S_CS_STATS_H_
+#ifdef _MSC_VER
+#  define _USE_MATH_DEFINES
+#endif
 
 #include "EXTERN.h"
 #include "perl.h"

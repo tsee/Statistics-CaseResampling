@@ -1,7 +1,7 @@
 #ifndef _S_CS_MATH_MT_H_
 #define _S_CS_MATH_MT_H_
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1300)
+#if defined(_MSC_VER)
 typedef unsigned __int32 uint32_t;
 #elif defined(__linux__) || defined(__GLIBC__) || defined(__WIN32__) || defined(__APPLE__)
 #include <stdint.h>
