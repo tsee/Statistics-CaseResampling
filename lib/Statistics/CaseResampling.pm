@@ -5,7 +5,7 @@ use warnings;
 
 require Exporter;
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
@@ -310,9 +310,12 @@ guarantee linearity.
 
 Steffen Mueller, E<lt>smueller@cpan.orgE<gt>
 
+Daniel Dragan, E<lt>bulk88@hotmail.comE<gt>, who supplied MSVC compatibility
+patches.
+
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2010, 2011, 2012 by Steffen Mueller
+Copyright (C) 2010, 2011, 2012, 2013 by Steffen Mueller
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.0 or,

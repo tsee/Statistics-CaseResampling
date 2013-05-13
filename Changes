@@ -1,5 +1,8 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.14  Mon May 13 21:50:00 2013
+  - MSVC (== C89) compatibility fixes (Daniel Dragan)
+
 0.13  Wed Aug  1 15:00:00 2012
   - Fixes to std. dev. functions: They were actually the variance. DOH.
 
