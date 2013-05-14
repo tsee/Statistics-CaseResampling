@@ -1,5 +1,8 @@
 Revision history for Perl extension Statistics::CaseResampling.
 
+0.15  Tue May 14 18:38:00 2013
+  - Do not override compiler optimization level in Makefile.PL (P Pisar)
+
 0.14  Mon May 13 21:50:00 2013
   - MSVC (== C89) compatibility fixes (Daniel Dragan)
 
