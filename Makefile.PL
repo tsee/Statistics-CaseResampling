@@ -12,7 +12,7 @@ WriteMakefile(
       (ABSTRACT_FROM  => 'lib/Statistics/CaseResampling.pm', # retrieve abstract from module
        AUTHOR         => 'Steffen Mueller <smueller@cpan.org>') : ()),
     LIBS              => [''], # e.g., '-lm'
-    DEFINE            => '-O2', # e.g., '-DHAVE_SOMETHING'
+    #DEFINE            => '-O2', # e.g., '-DHAVE_SOMETHING'
     INC               => '-I.', # e.g., '-I. -I/usr/include/other'
     OBJECT            => '$(O_FILES)', # link all the C files too
 );
