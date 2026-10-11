@@ -62,16 +62,20 @@ avToCAry(pTHX_ AV* in, double** out, I32* n)
   double* ary;
   SV** elem;
   I32 i;
+  *out = NULL;
   thisN = av_len(in)+1;
-  *n = thisN;
-  if (thisN == 0)
+  if (thisN <= 0) {
+    *n = 0;
     return;
+  }
+  *n = thisN;
 
   Newx(ary, thisN, double);
   *out = ary;
   for (i = 0; i < thisN; ++i) {
     if (NULL == (elem = av_fetch(in, i, 0))) {
       Safefree(ary);
+      *out = NULL;
       croak("Could not fetch element from array");
     }
     else
@@ -126,8 +130,8 @@ resample(sample)
     AV* sample
   PREINIT:
     I32 nelem;
-    double* csample;
-    double* destsample;
+    double* csample = NULL;
+    double* destsample = NULL;
     struct mt* rnd;
   CODE:
     rnd = get_rnd(aTHX);
@@ -152,8 +156,8 @@ resample_medians(sample, runs)
   PREINIT:
     I32 nelem;
     I32 i_run;
-    double* csample;
-    double* destsample;
+    double* csample = NULL;
+    double* destsample = NULL;
     struct mt* rnd;
   CODE:
     rnd = get_rnd(aTHX);
@@ -180,8 +184,8 @@ resample_means(sample, runs)
   PREINIT:
     I32 nelem;
     I32 i_run;
-    double* csample;
-    double* destsample;
+    double* csample = NULL;
+    double* destsample = NULL;
     struct mt* rnd;
   CODE:
     rnd = get_rnd(aTHX);
@@ -206,7 +210,7 @@ median(sample)
     AV* sample
   PREINIT:
     I32 nelem;
-    double* csample;
+    double* csample = NULL;
   CODE:
     avToCAry(aTHX_ sample, &csample, &nelem);
     if (nelem == 0)
@@ -221,7 +225,7 @@ median_absolute_deviation(sample)
     AV* sample
   PREINIT:
     I32 nelem;
-    double* csample;
+    double* csample = NULL;
   CODE:
     avToCAry(aTHX_ sample, &csample, &nelem);
     if (nelem == 0)
@@ -249,7 +253,7 @@ first_quartile(sample)
     AV* sample
   PREINIT:
     I32 nelem;
-    double* csample;
+    double* csample = NULL;
   CODE:
     avToCAry(aTHX_ sample, &csample, &nelem);
     if (nelem == 0)
@@ -265,7 +269,7 @@ third_quartile(sample)
     AV* sample
   PREINIT:
     I32 nelem;
-    double* csample;
+    double* csample = NULL;
   CODE:
     avToCAry(aTHX_ sample, &csample, &nelem);
     if (nelem == 0)
@@ -310,7 +314,7 @@ select_kth(sample, kth)
     I32 kth
   PREINIT:
     I32 nelem;
-    double* csample;
+    double* csample = NULL;
   CODE:
     avToCAry(aTHX_ sample, &csample, &nelem);
     if (kth < 1 || kth > nelem) {
@@ -328,7 +332,7 @@ median_simple_confidence_limits(sample, confidence, ...)
   PREINIT:
     /* "confidence" is 1-alpha */
     I32 runs, nelem, i_run;
-    double *csample, *destsample, *medians;
+    double *csample = NULL, *destsample = NULL, *medians = NULL;
     struct mt* rnd;
     double median   = 0.;
     double lower_ci = 0.;
@@ -380,7 +384,7 @@ simple_confidence_limits_from_samples(statistic, statistics, confidence)
   PREINIT:
     /* "confidence" is 1-alpha */
     I32 nelem;
-    double *cstatistics;
+    double *cstatistics = NULL;
     double lower_ci = 0.;
     double upper_ci = 0.;
     double alpha;
