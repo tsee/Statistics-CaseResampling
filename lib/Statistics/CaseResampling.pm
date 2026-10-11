@@ -5,7 +5,7 @@ use warnings;
 
 require Exporter;
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
@@ -314,7 +314,7 @@ guarantee linearity.
 
 =head1 AUTHOR
 
-Steffen Mueller, E<lt>smueller@cpan.orgE<gt>
+Steffen Mueller, E<lt>cpan@steffen-mueller.netE<gt>
 
 Daniel Dragan, E<lt>bulk88@hotmail.comE<gt>, who supplied MSVC compatibility
 patches.
