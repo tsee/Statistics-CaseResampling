@@ -30,4 +30,34 @@ use Statistics::CaseResampling ':all';
   is($u2, 0, 'simple_confidence_limits_from_samples([]) upper is 0');
 }
 
+# SCR-02: ithreads use-after-free and double-free protection
+{
+  use Config;
+  SKIP: {
+    skip 'This Perl does not support ithreads', 4 unless $Config{useithreads};
+    require threads;
+
+    my $t = threads->create(sub {
+      my $sample = [1..10];
+      my $res = resample($sample);
+      return scalar(@$res);
+    });
+    my $res = $t->join();
+    is($res, 10, 'thread executed resample successfully');
+
+    my $main_res = resample([1..10]);
+    is(scalar(@$main_res), 10, 'main thread executed resample after thread join without double-free');
+
+    # Also test an explicit generator object under threads
+    my $gen = Statistics::CaseResampling::RdGen::setup(12345);
+    my $t2 = threads->create(sub {
+      return 1;
+    });
+    $t2->join();
+    ok(1, 'thread with explicit generator joined without double-free');
+    my $val = $gen->genrand();
+    ok($val >= 0 && $val < 1, 'explicit generator still valid in parent thread');
+  }
+}
+
 done_testing();

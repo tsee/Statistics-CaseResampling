@@ -35,6 +35,12 @@ XSLoader::load('Statistics::CaseResampling', $VERSION);
 
 our $Rnd = Statistics::CaseResampling::RdGen::setup(rand());
 
+sub CLONE {
+  $Rnd = Statistics::CaseResampling::RdGen::setup(rand());
+}
+
+sub Statistics::CaseResampling::RdGen::CLONE_SKIP { 1 }
+
 
 1;
 __END__
