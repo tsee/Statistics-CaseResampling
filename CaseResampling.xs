@@ -15,7 +15,11 @@ typedef struct mt * Statistics__CaseResampling__RdGen;
 void*
 U32ArrayPtr (pTHX_ int n)
 {
-  SV * sv = sv_2mortal( NEWSV( 0, n*sizeof(U32) ) );
+  SV * sv;
+  if (n <= 0 || n > 10000000)
+    croak("Invalid array size for U32ArrayPtr");
+  sv = sv_2mortal( NEWSV( 0, n*sizeof(U32) ) );
+  SvGROW(sv, n*sizeof(U32));
   return SvPVX(sv);
 }
 
@@ -26,6 +30,8 @@ cs_mean_av(pTHX_ AV* sample)
   SV** elem;
   double sum;
   n = av_len(sample)+1;
+  if (n <= 0)
+    return 0.;
   sum = 0.;
   for (i = 0; i < n; ++i) {
     if (NULL == (elem = av_fetch(sample, i, 0))) {
@@ -44,6 +50,8 @@ cs_sum_deviation_squared_av(pTHX_ double mean, AV* sample)
   SV** elem;
   double sum;
   n = av_len(sample)+1;
+  if (n <= 0)
+    return 0.;
   sum = 0.;
   for (i = 0; i < n; ++i) {
     if (NULL == (elem = av_fetch(sample, i, 0))) {
@@ -160,6 +168,8 @@ resample_medians(sample, runs)
     double* destsample = NULL;
     struct mt* rnd;
   CODE:
+    if (runs < 1 || runs > 100000000)
+      croak("Number of resample runs must be between 1 and 100000000");
     rnd = get_rnd(aTHX);
     avToCAry(aTHX_ sample, &csample, &nelem);
     RETVAL = newAV();
@@ -188,6 +198,8 @@ resample_means(sample, runs)
     double* destsample = NULL;
     struct mt* rnd;
   CODE:
+    if (runs < 1 || runs > 100000000)
+      croak("Number of resample runs must be between 1 and 100000000");
     rnd = get_rnd(aTHX);
     avToCAry(aTHX_ sample, &csample, &nelem);
     RETVAL = newAV();
@@ -231,18 +243,18 @@ median_absolute_deviation(sample)
     if (nelem == 0)
       RETVAL = 0.;
     else {
-      unsigned int i;
+      I32 i;
       double* absdev;
 
       const double median = cs_median(csample, nelem);
       /* in principle, I think one could write an algorithm
        * that doesn't require mallocing the second array by inlining an
        * O(n) median that visits each element only once? */
-      absdev = (double*)malloc(nelem * sizeof(double));
+      Newx(absdev, nelem, double);
       for (i = 0; i < nelem; ++i)
         absdev[i] = fabs(csample[i] - median);
       RETVAL = cs_median(absdev, nelem);
-      free(absdev);
+      Safefree(absdev);
     }
     Safefree(csample);
   OUTPUT: RETVAL
@@ -292,9 +304,14 @@ double
 sample_standard_deviation(mean, sample)
     SV* mean
     AV* sample
+  PREINIT:
+    I32 n;
   CODE:
+    n = av_len(sample)+1;
+    if (n < 2)
+      croak("Sample standard deviation requires at least 2 data points");
     RETVAL =  cs_sum_deviation_squared_av(aTHX_ SvNV(mean), sample);
-    RETVAL = pow( RETVAL / av_len(sample), 0.5 ); /* av_len() is N-1! */
+    RETVAL = pow( RETVAL / (double)(n - 1), 0.5 );
   OUTPUT: RETVAL
 
 
@@ -302,9 +319,14 @@ double
 population_standard_deviation(mean, sample)
     SV* mean
     AV* sample
+  PREINIT:
+    I32 n;
   CODE:
+    n = av_len(sample)+1;
+    if (n < 1)
+      croak("Population standard deviation requires at least 1 data point");
     RETVAL =  cs_sum_deviation_squared_av(aTHX_ SvNV(mean), sample);
-    RETVAL = pow( RETVAL / (av_len(sample)+1), 0.5 ); /* av_len() is N-1! */
+    RETVAL = pow( RETVAL / (double)n, 0.5 );
   OUTPUT: RETVAL
 
 
@@ -318,6 +340,7 @@ select_kth(sample, kth)
   CODE:
     avToCAry(aTHX_ sample, &csample, &nelem);
     if (kth < 1 || kth > nelem) {
+      Safefree(csample);
       croak("Can't select %ith smallest element from a list of %i elements", kth, nelem);
     }
     RETVAL = cs_select(csample, nelem, kth-1);
@@ -344,8 +367,12 @@ median_simple_confidence_limits(sample, confidence, ...)
   PPCODE:
     if (items == 2)
       runs = 1000;
-    else if (items == 3)
-      runs = SvUV(ST(2));
+    else if (items == 3) {
+      IV r = SvIV(ST(2));
+      if (r < 1 || r > 100000000)
+        croak("Number of resample runs must be between 1 and 100000000");
+      runs = (I32)r;
+    }
     else {
       croak("Usage: ($lower, $median, $upper) = median_confidence_limits(\\@sample, $confidence, [$nruns]);");
     }

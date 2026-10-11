@@ -100,4 +100,66 @@ use Statistics::CaseResampling ':all';
   ok(defined $l4 && defined $m4 && defined $u4, 'simple_confidence_limits_from_samples with 0.0001 conf returned values');
 }
 
+# SCR-05: Validation of resample run counts
+{
+  eval { resample_medians([1..5], 0) };
+  like($@, qr/Number of resample runs must be between 1 and 100000000/, 'resample_medians rejects runs = 0');
+
+  eval { resample_medians([1..5], -1) };
+  like($@, qr/Number of resample runs must be between 1 and 100000000/, 'resample_medians rejects runs = -1');
+
+  eval { resample_means([1..5], 0) };
+  like($@, qr/Number of resample runs must be between 1 and 100000000/, 'resample_means rejects runs = 0');
+
+  eval { resample_means([1..5], -1) };
+  like($@, qr/Number of resample runs must be between 1 and 100000000/, 'resample_means rejects runs = -1');
+
+  eval { median_simple_confidence_limits([1..5], 0.95, 0) };
+  like($@, qr/Number of resample runs must be between 1 and 100000000/, 'median_simple_confidence_limits rejects runs = 0');
+
+  eval { median_simple_confidence_limits([1..5], 0.95, -1) };
+  like($@, qr/Number of resample runs must be between 1 and 100000000/, 'median_simple_confidence_limits rejects runs = -1');
+}
+
+# SCR-06: select_kth error handling
+{
+  eval { select_kth([1..5], 0) };
+  like($@, qr/Can't select 0th smallest element/, 'select_kth rejects kth = 0');
+
+  eval { select_kth([1..5], 6) };
+  like($@, qr/Can't select 6th smallest element/, 'select_kth rejects kth > nelem');
+
+  eval { select_kth([], 1) };
+  like($@, qr/Can't select 1th smallest element/, 'select_kth rejects kth on empty array');
+}
+
+# SCR-07: Standard deviation edge case guards & mean
+{
+  eval { sample_standard_deviation(10, []) };
+  like($@, qr/Sample standard deviation requires at least 2 data points/, 'sample_standard_deviation rejects empty array');
+
+  eval { sample_standard_deviation(10, [10]) };
+  like($@, qr/Sample standard deviation requires at least 2 data points/, 'sample_standard_deviation rejects single-element array');
+
+  eval { population_standard_deviation(10, []) };
+  like($@, qr/Population standard deviation requires at least 1 data point/, 'population_standard_deviation rejects empty array');
+
+  is(population_standard_deviation(10, [10]), 0, 'population_standard_deviation([10]) == 0');
+  is(mean([]), 0, 'mean([]) == 0 without division by zero');
+}
+
+# SCR-08: median_absolute_deviation allocator safety
+{
+  is(median_absolute_deviation([5]), 0, 'MAD of single element is 0');
+  is(median_absolute_deviation([1, 2, 3, 4, 5]), 1, 'MAD of [1..5] is 1');
+}
+
+# SCR-09: RdGen setup_array and buffer handling
+{
+  my $rnd = Statistics::CaseResampling::RdGen::setup_array(1, 2, 3, 4, 5);
+  ok(defined $rnd, 'setup_array creates RdGen object');
+  my $val = $rnd->genrand();
+  ok($val >= 0 && $val < 1, 'genrand produces random number in [0, 1)');
+}
+
 done_testing();
