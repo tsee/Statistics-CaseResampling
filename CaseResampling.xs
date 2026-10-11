@@ -332,6 +332,7 @@ median_simple_confidence_limits(sample, confidence, ...)
   PREINIT:
     /* "confidence" is 1-alpha */
     I32 runs, nelem, i_run;
+    I32 lower_idx, upper_idx;
     double *csample = NULL, *destsample = NULL, *medians = NULL;
     struct mt* rnd;
     double median   = 0.;
@@ -365,8 +366,14 @@ median_simple_confidence_limits(sample, confidence, ...)
       /* lower = t - (t*_((R+1)*(1-alpha)) - t)
        * upper = t - (t*_((R+1)*alpha) - t)
        */
-      lower_ci = 2.*median - cs_select( medians, runs, (I32)((runs+1.)*(1.-alpha)) );
-      upper_ci = 2.*median - cs_select( medians, runs, (I32)((runs+1.)*alpha) );
+      lower_idx = (I32)((runs+1.)*(1.-alpha));
+      upper_idx = (I32)((runs+1.)*alpha);
+      if (lower_idx >= runs) lower_idx = runs - 1;
+      if (lower_idx < 0)     lower_idx = 0;
+      if (upper_idx >= runs) upper_idx = runs - 1;
+      if (upper_idx < 0)     upper_idx = 0;
+      lower_ci = 2.*median - cs_select( medians, runs, (U32)lower_idx );
+      upper_ci = 2.*median - cs_select( medians, runs, (U32)upper_idx );
       Safefree(medians);
     }
     Safefree(csample);
@@ -384,6 +391,7 @@ simple_confidence_limits_from_samples(statistic, statistics, confidence)
   PREINIT:
     /* "confidence" is 1-alpha */
     I32 nelem;
+    I32 lower_idx, upper_idx;
     double *cstatistics = NULL;
     double lower_ci = 0.;
     double upper_ci = 0.;
@@ -399,8 +407,14 @@ simple_confidence_limits_from_samples(statistic, statistics, confidence)
       /* lower = t - (t*_((R+1)*(1-alpha)) - t)
        * upper = t - (t*_((R+1)*alpha) - t)
        */
-      lower_ci = 2.*statistic - cs_select( cstatistics, nelem, (I32)((nelem+1.)*(1.-alpha)) );
-      upper_ci = 2.*statistic - cs_select( cstatistics, nelem, (I32)((nelem+1.)*alpha) );
+      lower_idx = (I32)((nelem+1.)*(1.-alpha));
+      upper_idx = (I32)((nelem+1.)*alpha);
+      if (lower_idx >= nelem) lower_idx = nelem - 1;
+      if (lower_idx < 0)      lower_idx = 0;
+      if (upper_idx >= nelem) upper_idx = nelem - 1;
+      if (upper_idx < 0)      upper_idx = 0;
+      lower_ci = 2.*statistic - cs_select( cstatistics, nelem, (U32)lower_idx );
+      upper_ci = 2.*statistic - cs_select( cstatistics, nelem, (U32)upper_idx );
     }
     Safefree(cstatistics);
     EXTEND(SP, 3);

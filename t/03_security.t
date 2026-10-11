@@ -60,4 +60,44 @@ use Statistics::CaseResampling ':all';
   }
 }
 
+# SCR-03: Quartile calculations for small arrays without out-of-bounds reads
+{
+  # n = 1
+  is(first_quartile([10]), 10, 'first_quartile([10]) == 10');
+  is(third_quartile([10]), 10, 'third_quartile([10]) == 10');
+  is(median([10]), 10, 'median([10]) == 10');
+
+  # n = 2
+  is(first_quartile([10, 20]), 10, 'first_quartile([10, 20]) == 10');
+  is(third_quartile([10, 20]), 20, 'third_quartile([10, 20]) == 20 (not OOB heap garbage)');
+  is(median([10, 20]), 10, 'median([10, 20]) == 10');
+
+  # n = 3
+  is(first_quartile([10, 20, 30]), 10, 'first_quartile([10, 20, 30]) == 10');
+  is(third_quartile([10, 20, 30]), 30, 'third_quartile([10, 20, 30]) == 30');
+  is(median([10, 20, 30]), 20, 'median([10, 20, 30]) == 20');
+
+  # n = 4
+  is(first_quartile([10, 20, 30, 40]), 20, 'first_quartile([10, 20, 30, 40]) == 20');
+  is(third_quartile([10, 20, 30, 40]), 40, 'third_quartile([10, 20, 30, 40]) == 40');
+  is(median([10, 20, 30, 40]), 20, 'median([10, 20, 30, 40]) == 20');
+}
+
+# SCR-04: Confidence limits bounds clamping on extreme confidence levels
+{
+  # High confidence
+  my ($l1, $m1, $u1) = median_simple_confidence_limits([1..50], 0.9999, 10);
+  ok(defined $l1 && defined $m1 && defined $u1, 'median_simple_confidence_limits with 0.9999 conf returned values');
+
+  my ($l2, $m2, $u2) = simple_confidence_limits_from_samples(5, [1..5], 0.9999);
+  ok(defined $l2 && defined $m2 && defined $u2, 'simple_confidence_limits_from_samples with 0.9999 conf returned values');
+
+  # Low confidence
+  my ($l3, $m3, $u3) = median_simple_confidence_limits([1..50], 0.0001, 10);
+  ok(defined $l3 && defined $m3 && defined $u3, 'median_simple_confidence_limits with 0.0001 conf returned values');
+
+  my ($l4, $m4, $u4) = simple_confidence_limits_from_samples(5, [1..5], 0.0001);
+  ok(defined $l4 && defined $m4 && defined $u4, 'simple_confidence_limits_from_samples with 0.0001 conf returned values');
+}
+
 done_testing();
